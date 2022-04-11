@@ -12,3 +12,6 @@ upgrade/*.h
 
 # Exclude upgrade binary
 upgrade/upgrade
+
+# IDE
+.idea
