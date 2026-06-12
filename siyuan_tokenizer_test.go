@@ -18,6 +18,8 @@ func openSiYuanFTS(t *testing.T, tokenize string, docs []string) *sql.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// :memory: 下连接池的每个新连接都是一个独立的内存库，必须钉死单连接
+	db.SetMaxOpenConns(1)
 	if _, err = db.Exec(fmt.Sprintf(
 		`CREATE VIRTUAL TABLE t USING fts5(content, tokenize="%s")`, tokenize)); err != nil {
 		t.Fatal(err)
@@ -44,6 +46,9 @@ func ftsMatch(t *testing.T, db *sql.DB, query string) []string {
 			t.Fatal(err)
 		}
 		got = append(got, s)
+	}
+	if err = rows.Err(); err != nil {
+		t.Fatalf("MATCH %q: %v", query, err)
 	}
 	return got
 }
@@ -140,6 +145,9 @@ func TestSiYuanTokenizerHighlightOffsets(t *testing.T) {
 			t.Fatal(err)
 		}
 		got = append(got, s)
+	}
+	if err = rows.Err(); err != nil {
+		t.Fatal(err)
 	}
 	want := []string{"[詩經]研究", "[诗经]研究", "[诗經]混排文本"}
 	if !reflect.DeepEqual(got, want) {

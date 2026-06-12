@@ -240271,9 +240271,15 @@ static int fts5SiYuanTokenize(Fts5Tokenizer* tokenizer_ptr, void* pCtx, int flag
         }
 
         rc = xToken(pCtx, 0, pLwrText + iStart, length, iStart, iEnd);
+        if (rc != SQLITE_OK) {
+            break; /* xToken 返回 SQLITE_DONE（提前终止）或错误时停止分词 */
+        }
         iStart = iEnd;
     }
     sqlite3_free(zFold);
+    if (SQLITE_DONE == rc) {
+        rc = SQLITE_OK; /* 与 porter 等内置分词器一致：提前终止视为成功 */
+    }
 	return rc;
 }
 ////////////////////////////////////
