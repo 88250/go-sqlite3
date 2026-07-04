@@ -4,11 +4,15 @@
 package sqlite3
 
 /*
-#ifndef USE_LIBSQLITE3
+#if !defined(USE_LIBSQLITE3) && !defined(USE_LIBSQLCIPHER) && !defined(USE_SQLCIPHER)
 #cgo CFLAGS: -DSQLITE_ENABLE_COLUMN_METADATA
 #include "sqlite3-binding.h"
-#else
+#elif defined(USE_LIBSQLITE3)
 #include <sqlite3.h>
+#elif defined(USE_LIBSQLCIPHER)
+#include <sqlcipher/sqlite3.h>
+#elif defined(USE_SQLCIPHER)
+#include "sqlcipher-binding.h"
 #endif
 */
 import "C"
