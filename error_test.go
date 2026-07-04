@@ -3,6 +3,7 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
+//go:build cgo
 // +build cgo
 
 package sqlite3
@@ -42,7 +43,10 @@ func TestCorruptDbErrors(t *testing.T) {
 		_, err = db.Exec("drop table foo")
 	}
 
-	sqliteErr := err.(Error)
+	sqliteErr, ok := err.(Error)
+	if !ok {
+		t.Fatal(err)
+	}
 	if sqliteErr.Code != ErrNotADB {
 		t.Error("wrong error code for corrupted DB")
 	}
