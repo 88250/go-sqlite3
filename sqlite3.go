@@ -1059,12 +1059,44 @@ func (c *SQLiteConn) query(ctx context.Context, query string, args []driver.Name
 		}
 		start += na
 		tail := ss.t
-		if tail == "" {
+		if isEmptyQueryTail(tail) {
 			return rows, nil
 		}
-		rows.Close()
+		// 完整执行前面的语句，再准备下一条；只将最后一条语句的结果交给调用方。
+		for err = rows.Next(nil); err == nil; err = rows.Next(nil) {
+		}
+		closeErr := rows.Close()
 		ss.Close()
+		if err != io.EOF {
+			return nil, err
+		}
+		if closeErr != nil {
+			return nil, closeErr
+		}
 		query = tail
+	}
+}
+
+// isEmptyQueryTail 识别语句后的空白、空语句与注释，不将其中的分号当作可执行 SQL。
+func isEmptyQueryTail(query string) bool {
+	for {
+		query = strings.TrimLeft(query, " \t\r\n\f;")
+		switch {
+		case strings.HasPrefix(query, "--"):
+			end := strings.IndexByte(query, '\n')
+			if end < 0 {
+				return true
+			}
+			query = query[end+1:]
+		case strings.HasPrefix(query, "/*"):
+			end := strings.Index(query[2:], "*/")
+			if end < 0 {
+				return true
+			}
+			query = query[end+4:]
+		default:
+			return query == ""
+		}
 	}
 }
 
